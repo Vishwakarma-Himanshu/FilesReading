@@ -1,0 +1,120 @@
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.time.Duration;
+import java.time.Instant;
+
+import com.java.Utility.OracleConn;
+
+public class ATMNCR {
+
+	public static void main(String[] args) throws Exception {//ej_atm_cub
+		Instant start = Instant.now();
+		OracleConn conn=new OracleConn();
+		Connection con = conn.getconn();
+		BufferedReader br = null;
+		File allwincoreFile = new File("D:\\ATM_CIA PROJECT\\CIA 28072023\\EJ\\ATM\\NCR\\");
+		File[] allFiles = allwincoreFile.listFiles();
+		for(File ncr: allFiles) {
+			if(ncr.isFile()) {
+				System.out.println(ncr.getName());
+				String query = "insert into ej_atm_cub(processing_time, atm_id, card_numb, trace, rrn, amount, account_num, resp_no, withdrawal_status) values(?, ?, ?, ?, ?, ?, ?, ?, ?)";
+				FileInputStream fIns = new FileInputStream(ncr);
+				InputStreamReader insReader = new InputStreamReader( fIns);
+				br = new BufferedReader(insReader);
+				PreparedStatement ps = con.prepareStatement(query);
+				String line = "";
+				String processing_time = "", atm_id = "", card_numb = "", trace = "", rrn = "", amount = "", account_num = "", resp_no = "", withdrawal_status = "";
+				int rowCount = 0;
+				String[] lines;
+				while((line = br.readLine())!= null) {
+					if(line.contains("CUB")) {
+						lines = line.split("\\s+", -1);
+						processing_time = lines[1]+" "+lines[2];
+						atm_id = lines[3]; 
+						line = br.readLine();
+						line = br.readLine();
+						lines = line.split("\\s+", -1);
+						card_numb = lines[1];
+						trace = lines[3];
+						line = br.readLine();
+						if(line.contains("BALANCE INQUIRY") || line.contains("PIN")) {
+							amount = line.trim();
+						}else if(line.contains("CASH WITHDRAWAL")) {
+							lines = line.split("\\s+", -1);
+							amount = lines[4];
+							withdrawal_status = "CASH WITHDRAWAL";
+						}else if(line.contains("REF")) {
+							lines = line.split("\\s+", -1);
+							rrn = lines[3];
+						}else {					
+							lines = line.split("\\s+", -1);
+							rrn = lines[3];
+						}
+						line = br.readLine();
+						if(line.contains("CASH WITHDRAWAL")) {
+							lines = line.split("\\s+", -1);
+							amount = lines[4];
+							withdrawal_status = "CASH WITHDRAWAL";
+						}else if(line.contains("HOST") || line.contains("START")) {
+							account_num = "";
+							amount = "";
+							resp_no = "";
+							continue;
+						}else if(line.contains("BALANCE") || line.contains("PIN")) {
+							amount = "BALANCE INQUIRY";
+						}else if(line.contains("OFFUS") || line.contains("Mobile")) {
+							
+						}else {
+							lines = line.split("\\s+", -1);
+							rrn = lines[3];
+						}
+						line = br.readLine();
+						if(line.length()>8) {
+							lines = line.split("\\s+", -1);
+							account_num = lines[3];					
+						}else {
+							account_num = "";
+						}
+						line = br.readLine();
+						if(line.contains("RESP")) {
+							lines = line.split("\\s+", -1);
+							resp_no = lines[2];
+						}else {
+							line = br.readLine();
+							lines = line.split("\\s+", -1);
+							resp_no = lines[2];
+						}
+					}else if(line.contains("TRANSACTION END")) {
+						ps.setString(1, processing_time);
+						ps.setString(2, atm_id);
+						ps.setString(3, card_numb);
+						ps.setString(4, trace);
+						ps.setString(5, rrn);
+						ps.setString(6, amount);
+						ps.setString(7, account_num);
+						ps.setString(8, resp_no);
+						ps.setString(9, withdrawal_status);
+						rowCount++;
+						ps.addBatch();
+						processing_time = ""; atm_id = ""; card_numb = ""; trace = ""; rrn = ""; amount = ""; account_num = ""; resp_no = ""; withdrawal_status = "";
+						continue;
+					}
+					else
+						continue;
+				}
+				ps.executeBatch();
+				ps.close();
+				Instant end = Instant. now();
+				Duration timeElapsed = Duration.between(start, end);
+				System.out.println("Total time taken "+timeElapsed.getSeconds()+" seconds for "+rowCount+" data.");
+			}
+		}
+		br.close();
+		con.close();
+	}
+
+}
