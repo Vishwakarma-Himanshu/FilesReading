@@ -1,0 +1,362 @@
+Controller
+@SuppressWarnings("unused")
+	@RequestMapping(value = "/dlrTtumDownload.do", method = RequestMethod.POST)
+	public void downloadDlrTTUM(String startDatePicker, HttpSession session, HttpServletResponse response,
+			HttpServletRequest req, Model model) throws IOException {
+		String fileName = "", filePath = "";
+		String[] CMS_TTUM = {"test_1", "test_2", "test_3", "test_4", "test_5"};
+		String[] WBS_TTUM = {"test_6", "test_7", "test_8", "test_9", "test_10"};
+		String[] SVIL_TTUM = {"test_11", "test_12", "test_13", "test_14", "test_15"};
+		String[] SISCO_TTUM = {"test_16", "test_17", "test_18", "test_19", "test_20"};
+		int Case = 1;
+		for(String tables: CMS_TTUM) {
+			try {
+				String date = (String) java.time.LocalDate.now().toString();
+				List<String> data = fileimpo.getDLRTTUMDownloadReport(tables);
+				String TEMP_DIR = System.getProperty("java.io.tmpdir");
+				String stpath = TEMP_DIR + "\\BBPS\\";
+				fileName = "CMS_TTUM_REPORT_CASE_"+Case+"_" + startDatePicker.replace("/", "_") + ".txt";
+				GenerateBbpsReport voucher = new GenerateBbpsReport();
+				String stPath = voucher.checkAndMakeDirectory1(date, "BBPS");
+				voucher.generateTtumFile(stPath, fileName, data);
+				File fileData = new File(stPath + File.separator + fileName);
+				Case++;
+//				FileInputStream inputStream = new FileInputStream(fileData);
+//				response.setContentLength((int) fileData.length());
+//				response.setContentType("application/txt");
+//				String headerKey = "Content-Disposition";
+//				String headerValue = String.format("attachment; filename=\"%s\"", fileData.getName());
+//				response.setHeader(headerKey, headerValue);
+//				OutputStream outStream = response.getOutputStream();
+//				IOUtils.copy(inputStream, outStream);
+//				response.flushBuffer();
+//				outStream.close();
+//				inputStream.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				try {
+//					new File(fileName).delete();
+//					System.gc();
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+			}
+		}
+	
+		
+		Case = 1;
+		for(String tables: WBS_TTUM) {
+			try {
+				String date = (String) java.time.LocalDate.now().toString();
+				List<String> data = fileimpo.getDLRTTUMDownloadReport(tables);
+				String TEMP_DIR = System.getProperty("java.io.tmpdir");
+				String stpath = TEMP_DIR + "\\BBPS\\";
+				fileName = "WBS_TTUM_REPORT_CASE_"+Case+"_" + startDatePicker.replace("/", "_") + ".txt";
+				GenerateBbpsReport voucher = new GenerateBbpsReport();
+				String stPath = voucher.checkAndMakeDirectory1(date, "BBPS");
+				voucher.generateTtumFile(stPath, fileName, data);
+				File fileData = new File(stPath + File.separator + fileName);
+				Case++;
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				try {
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+			}
+		}
+		
+		Case = 1;
+		for(String tables: SVIL_TTUM) {
+			try {
+				String date = (String) java.time.LocalDate.now().toString();
+				List<String> data = fileimpo.getDLRTTUMDownloadReport(tables);
+				String TEMP_DIR = System.getProperty("java.io.tmpdir");
+				String stpath = TEMP_DIR + "\\BBPS\\";
+				fileName = "SVIL_TTUM_REPORT_CASE_"+Case+"_" + startDatePicker.replace("/", "_") + ".txt";
+				GenerateBbpsReport voucher = new GenerateBbpsReport();
+				String stPath = voucher.checkAndMakeDirectory1(date, "BBPS");
+				voucher.generateTtumFile(stPath, fileName, data);
+				File fileData = new File(stPath + File.separator + fileName);
+				Case++;
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				try {
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+			}
+		}
+		
+		Case = 1;
+		for(String tables: SISCO_TTUM) {
+			try {
+				String date = (String) java.time.LocalDate.now().toString();
+				List<String> data = fileimpo.getDLRTTUMDownloadReport(tables);
+				String TEMP_DIR = System.getProperty("java.io.tmpdir");
+				String stpath = TEMP_DIR + "\\BBPS\\";
+				fileName = "SISCO_TTUM_REPORT_CASE_"+Case+"_" + startDatePicker.replace("/", "_") + ".txt";
+				GenerateBbpsReport voucher = new GenerateBbpsReport();
+				String stPath = voucher.checkAndMakeDirectory1(date, "BBPS");
+				voucher.generateTtumFile(stPath, fileName, data);
+				File fileData = new File(stPath + File.separator + fileName);
+				filePath = fileData.getAbsolutePath();
+				Case++;
+			} catch (Exception e) {
+				e.printStackTrace();
+			} finally {
+				try {
+				} catch (Exception e2) {
+					e2.printStackTrace();
+				}
+			}
+		}
+		//path where our file is created by default
+		String updatedPath = filePath.replace("\\", "/");
+    	updatedPath = updatedPath.substring(0, updatedPath.lastIndexOf('/', updatedPath.lastIndexOf('/')));
+		File dir = new File(updatedPath);
+		//destination where we are creating our zip file for production need to be stored in tomcat C drive
+		String zipDirName = "D:/All_TTUM_"+startDatePicker+".zip";
+		
+		class ZipFiles {
+			List<String> filesListInDir = new ArrayList<String>();
+	        
+	        private void zipDirectory(File dir, String zipDirName) {
+	            try {
+	                populateFilesList(dir);
+	                //now zip files one by one
+	                //create ZipOutputStream to write to the zip file
+	                FileOutputStream fos = new FileOutputStream(zipDirName);
+	                ZipOutputStream zos = new ZipOutputStream(fos);
+	                for(String filePath : filesListInDir){
+	                    //for ZipEntry we need to keep only relative file path, so we used substring on absolute path
+	                    ZipEntry ze = new ZipEntry(filePath.substring(dir.getAbsolutePath().length()+1, filePath.length()));
+	                    zos.putNextEntry(ze);
+	                    //read the file and write to ZipOutputStream
+	                    FileInputStream fis = new FileInputStream(filePath);
+	                    byte[] buffer = new byte[1024];
+	                    int len;
+	                    while ((len = fis.read(buffer)) > 0) {
+	                        zos.write(buffer, 0, len);
+	                    }
+	                    zos.closeEntry();
+	                    fis.close();
+	                }
+	                zos.close();
+	                fos.close();
+	            } catch (IOException e) {
+	                e.printStackTrace();
+	            }
+	        }
+	        
+	        private void populateFilesList(File dir) throws IOException {
+	            File[] files = dir.listFiles();
+	            for(File file : files){
+	                if(file.isFile()) filesListInDir.add(file.getAbsolutePath());
+	                else populateFilesList(file);
+	            }
+	        }
+		}
+		
+		ZipFiles zipFiles = new ZipFiles();
+		zipFiles.zipDirectory(dir, zipDirName);	
+		//passing destination zip file path for download pop up
+		File file = new File(zipDirName);
+		FileInputStream inputstream = new FileInputStream(file);
+		response.setContentLength((int) file.length());
+		response.setContentType("application/zip");
+		String headerKey = "Content-Disposition";
+		String headerValue = String.format("attachment; filename=\"%s\"", file.getName());
+		response.setHeader(headerKey, headerValue);
+		OutputStream outStream = response.getOutputStream();
+		IOUtils.copy(inputstream, outStream);
+		response.flushBuffer();
+	}
+
+ServiceImpl
+@Override
+	public List<String> getDLRTTUMDownloadReport(String tableName) {
+		List<String> data = new ArrayList<String>();
+		List<TtumReport> ttumReportList = importFileDao.dlrTtumFileDownload(tableName);
+
+		for (TtumReport ttumReport : ttumReportList) {
+			data.add(ttumReport.getData());
+		}
+		return data;
+	}
+
+DaoImpl
+@Override
+	public List<TtumReport> dlrTtumFileDownload(String tableName) {
+		List<TtumReport> debitList = new ArrayList<TtumReport>();
+		String query = null;
+		query = "select * from "+tableName+" order by srno";
+		debitList = jdbcTemplate.query(query, new RowMapper<TtumReport>() {
+			@Override
+			public TtumReport mapRow(ResultSet rs, int arg1) throws SQLException {
+				TtumReport e = new TtumReport();
+				e.setData(rs.getString(1));
+				return e;
+			}
+		});
+		return debitList;
+	}
+
+GenerateReport Class for directory management
+package com.java.Utility;
+
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
+
+public class GenerateBbpsReport {
+	private static final Logger logger = Logger.getLogger(GenerateBbpsReport.class);
+
+	public String checkAndMakeDirectory(String fileDate, String category) throws ParseException {
+		SimpleDateFormat sdf;
+		java.util.Date date;
+		String stnewDate = "";
+		try {
+			String stPath = System.getProperty("java.io.tmpdir");
+			try {
+				sdf = new SimpleDateFormat("yyyy-mm-dd");
+				date = sdf.parse(fileDate);
+				sdf = new SimpleDateFormat("dd-MM-yyyy");
+				stnewDate = sdf.format(date);
+			} catch (java.text.ParseException parseExep) {
+				// logger.info("Exception While parsing date");
+				sdf = new SimpleDateFormat("yyyy/mm/dd");
+				date = sdf.parse(fileDate);
+				sdf = new SimpleDateFormat("dd-MM-yyyy");
+				stnewDate = sdf.format(date);
+			} catch (Exception e) {
+				logger.info("Exception while Parsing date Format");
+			}
+			// Delete folder and create folder
+			try {
+				logger.info("path is " + stPath + File.separator + category);
+				File checkFile = new File(stPath + File.separator + category);
+				if (checkFile.exists()) {
+					FileUtils.forceDelete(new File(stPath + File.separator + category));
+				}
+				// Check whether category folder is there or not
+				File directory = new File(stPath + File.separator + category);
+				if (!directory.exists()) {
+					directory.mkdir();
+				}
+				directory = new File(stPath + File.separator + category + File.separator + stnewDate);
+				if (!directory.exists()) {
+					directory.mkdir();
+				}
+				return (stPath + File.separator + category + File.separator + stnewDate);
+			} catch (IOException ioExcep) {
+				int fileCount = 0;
+				logger.info(stPath + File.separator + category);
+				File checkFile = new File(stPath + File.separator + category);
+				if (checkFile.exists()) {
+					String[] files = checkFile.list();
+					fileCount = files.length;
+				}
+				logger.info("new path is " + stPath + File.separator + category + "_" + (fileCount + 1));
+				// check whether category folder is there or not
+				File directory = new File(stPath + File.separator + category + "_" + (fileCount + 1));
+				if (!directory.exists()) {
+					directory.mkdir();
+				}
+				directory = new File(
+						stPath + File.separator + category + "_" + (fileCount) + File.separator + stnewDate);
+				if (!directory.exists()) {
+					directory.mkdir();
+				}
+				return (stPath + File.separator + category + "_" + (fileCount) + File.separator + stnewDate);
+			}
+		} catch (Exception e) {
+			logger.info("Exception in checkAndMakeDirectory method " + e);
+			return "Exception Occured";
+		}
+
+	}
+
+	public String checkAndMakeDirectory1(String fileDate, String category) throws ParseException {
+		SimpleDateFormat sdf;
+		java.util.Date date;
+		String stnewDate = "";
+		try {
+			String stPath = System.getProperty("java.io.tmpdir");
+			try {
+				sdf = new SimpleDateFormat("yyyy-mm-dd");
+				date = sdf.parse(fileDate);
+				sdf = new SimpleDateFormat("dd-MM-yyyy");
+				stnewDate = sdf.format(date);
+			} catch (java.text.ParseException parseExep) {
+				// logger.info("Exception While parsing date");
+				sdf = new SimpleDateFormat("yyyy/mm/dd");
+				date = sdf.parse(fileDate);
+				sdf = new SimpleDateFormat("dd-MM-yyyy");
+				stnewDate = sdf.format(date);
+			} catch (Exception e) {
+				logger.info("Exception while Parsing date Format");
+			}
+			logger.info("path is " + stPath + File.separator + category);
+			File checkFile = new File(stPath + File.separator + category);
+			if (checkFile.exists()) {
+//					FileUtils.forceDelete(new File(stPath + File.separator + category));
+			}
+			// Check whether category folder is there or not
+			File directory = new File(stPath + File.separator + category);
+			if (!directory.exists()) {
+				directory.mkdir();
+			}
+			directory = new File(stPath + File.separator + category + File.separator + stnewDate);
+			if (!directory.exists()) {
+				directory.mkdir();
+			}
+			return (stPath + File.separator + category + File.separator + stnewDate);
+		} catch (Exception e) {
+			logger.info("Exception in checkAndMakeDirectory method " + e);
+			return "Exception Occured";
+		}
+
+	}
+	
+	public void generateTtumFile(String stPath, String FileName, List<String> TTUMData) {
+		StringBuffer lineData;
+		try {
+			File file = new File(stPath + File.separator + FileName);
+			if (file.exists()) {
+				FileUtils.forceDelete(file);
+			}
+			// file.mkdir();
+			file.createNewFile();
+			BufferedWriter out = new BufferedWriter(new FileWriter(stPath + File.separator + FileName, true));
+			int startLine = 0;
+			// for(Object Data:TTUMData){
+			// //List<String> st=new ArrayList<>();
+//	                )
+			for (int i = 0; i < TTUMData.size(); i++) {
+				if (startLine > 0) {
+					out.write("\n");
+				}
+				startLine++;
+				lineData = new StringBuffer();
+				lineData.append(TTUMData.get(i));
+				out.write(lineData.toString());
+			}
+			out.flush();
+			out.close();
+		} catch (Exception e) {
+			logger.info("Exception in generateTtumFile " + e);
+		}
+
+	}
+}
