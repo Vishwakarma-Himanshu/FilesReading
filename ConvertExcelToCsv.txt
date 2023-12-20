@@ -1,0 +1,48 @@
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+
+public class ConvertExcelToCsv {
+
+	public void convertxlstoCSV(FileInputStream inputStream) throws IOException, InvalidFormatException {
+        Workbook wb = WorkbookFactory.create(inputStream);
+        Sheet sheet = wb.getSheetAt(0);
+        Row row = null;
+        String str = new String();
+        for (int i = 0; i < sheet.getLastRowNum()+1; i++) {
+            row = sheet.getRow(i);
+            Row currentRow = (Row) sheet.getRow(i);
+            String rowString = new String();
+            for (int j = 0; j < currentRow.getLastCellNum(); j++) {
+                if(row.getCell(j)==null) {
+                    rowString = rowString + " "  + ",";
+                }
+                else {
+                    rowString = rowString + row.getCell(j)+ ",";
+                }
+            }
+            str = str + rowString.substring(0,rowString.length()-1)+ "\n";
+        }
+        try {
+        	FileWriter fWriter = new FileWriter("D:\\ReadTxtFile\\Prathmesh\\TestFile.txt");
+        	 fWriter.write(str);
+        	 fWriter.close();
+        } catch (IOException e) {
+            System.out.print(e.getMessage());
+        }
+    }
+	
+	public static void main(String[] args) throws Exception {
+		FileInputStream fis=new FileInputStream(new File("D:\\ReadTxtFile\\Prathmesh\\RefundDetails_REC_KSC01_20230903022917817_23092313_47.xls")); 
+		ConvertExcelToCsv csv = new ConvertExcelToCsv();
+		csv.convertxlstoCSV(fis);
+	}
+
+}
